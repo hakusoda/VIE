@@ -11,7 +11,7 @@ work in pORGRESS!!!!
 brew install hakusoda/tap/vie
 
 # when you need to update VIE...
-# (pretend there's a command here)
+brew upgrade vie
 ```
 
 ### Roblox Studio Plugin
