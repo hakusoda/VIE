@@ -1,0 +1,12 @@
+{
+	"yaml.schemas": {
+		"test_schema.json": "*.vie"
+	},
+	"files.associations": {
+		"*.vie": "yaml"
+	},
+	"luau-lsp.types.roblox": true,
+	"luau-lsp.sourcemap.enabled": false,
+	"rust-analyzer.linkedProjects": ["./Cargo.toml"],
+	"rust-analyzer.showUnlinkedFileNotification": false
+}
