@@ -206,7 +206,6 @@ export_button.Click:Connect(function()
 	local instance = assert(Selection:Get()[1])
 	local b = a(instance)
 	
-	print(b)
 	local json = HttpService:JSONEncode({
 		kind = "export",
 		data = { b }

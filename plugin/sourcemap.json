@@ -1,0 +1,1 @@
+{"name":"vie_plugin","className":"Folder","children":[{"name":"plugin_root","className":"Script","filePaths":["src/plugin_root.luau"]},{"name":"functions","className":"Folder","children":[{"name":"get_full_api_dump","className":"ModuleScript","filePaths":["src/functions/get_full_api_dump.luau"]}]}]}

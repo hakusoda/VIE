@@ -1,5 +1,7 @@
-use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::{
+	net::SocketAddr,
+	path::PathBuf
+};
 use serde::Deserialize;
 use tokio::net::TcpListener;
 use hyper::{
@@ -11,7 +13,10 @@ use hyper::{
 use hyper_util::rt::TokioIo;
 use http_body_util::{ Full, BodyExt };
 
-use crate::data::Instance;
+use crate::data::{
+	Instance,
+	RojoSourcemapInstance
+};
 
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -29,7 +34,7 @@ fn instance_is_script(instance: &Instance) -> bool {
 	class == "Script" || class == "LocalScript" || class == "ModuleScript"
 }
 
-fn write_instance(instance: &Instance, current_dir: &PathBuf, is_root_dir: bool) {
+fn write_instance(instance: &mut Instance, root_dir: &PathBuf, current_dir: &PathBuf, is_root_dir: bool) {
 	let current_dir = match !is_root_dir && instance.children.is_some() {
 		true => current_dir.join(&instance.name),
 		false => current_dir.clone()
@@ -43,7 +48,9 @@ fn write_instance(instance: &Instance, current_dir: &PathBuf, is_root_dir: bool)
 			}
 		};
 		std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-		std::fs::write(path, instance.source.as_ref().unwrap()).unwrap();
+		std::fs::write(&path, instance.source.as_ref().unwrap()).unwrap();
+
+		instance.file_path = Some(path.strip_prefix(root_dir).unwrap().to_path_buf());
 	} else {
 		let path = match is_root_dir {
 			true => current_dir.join("+instance.vie"),
@@ -58,9 +65,9 @@ fn write_instance(instance: &Instance, current_dir: &PathBuf, is_root_dir: bool)
 		}
 	}
 
-	if let Some(children) = &instance.children {
-		for instance in children.iter() {
-			write_instance(instance, &current_dir, false);
+	if let Some(children) = &mut instance.children {
+		for instance in children.iter_mut() {
+			write_instance(instance, &root_dir, &current_dir, false);
 		}
 	}
 }
@@ -69,12 +76,17 @@ async fn hello(request: Request<hyper::body::Incoming>) -> Result<Response<Full<
 	let body = request.collect().await?.aggregate();
 	let payload: Payload = serde_json::from_reader(body.reader())?;
 	match payload {
-		Payload::Export { data } => {
-			let root = data.first().unwrap();
-			let root_dir = std::env::current_dir().unwrap().join("src");
+		Payload::Export { mut data } => {
+			let root = data.first_mut().unwrap();
+
+			let current_dir = std::env::current_dir().unwrap();
+			let root_dir = current_dir.join("src");
 			std::fs::remove_dir_all(&root_dir).unwrap();
 
-			write_instance(root, &root_dir, true);
+			write_instance(root, &current_dir, &root_dir, true);
+
+			let sourcemap = RojoSourcemapInstance::from(root);
+			std::fs::write(current_dir.join("sourcemap.json"), serde_json::to_string(&sourcemap).unwrap()).unwrap();
 		},
 		_ => unimplemented!()
 	}

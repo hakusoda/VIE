@@ -3,6 +3,7 @@
 
 use std::{
 	hash::Hash,
+	path::PathBuf,
 	collections::HashMap
 };
 use serde::{
@@ -23,7 +24,32 @@ pub struct Instance {
 	#[serde(skip_serializing_if = "Option::is_none", serialize_with = "serialize_data_types")]
 	pub properties: Option<HashMap<String, DataType>>,
 	#[serde(skip_serializing_if = "Option::is_none", serialize_with = "serialize_data_types")]
-	pub attributes: Option<HashMap<String, DataType>>
+	pub attributes: Option<HashMap<String, DataType>>,
+
+	#[serde(skip)]
+	pub file_path: Option<PathBuf>
+}
+
+#[derive(Serialize)]
+pub struct RojoSourcemapInstance {
+	name: String,
+	#[serde(rename = "className")]
+	class: String,
+	#[serde(rename = "filePaths", skip_serializing_if = "Option::is_none")]
+	paths: Option<Vec<PathBuf>>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	children: Option<Vec<RojoSourcemapInstance>>
+}
+
+impl RojoSourcemapInstance {
+	pub fn from(instance: &Instance) -> Self {
+		RojoSourcemapInstance {
+			name: instance.name.clone(),
+			class: instance.class.clone(),
+			paths: instance.file_path.clone().map(|x| vec![x]),
+			children: instance.children.as_ref().map(|x| x.iter().map(|x| RojoSourcemapInstance::from(x)).collect())
+		}
+	}
 }
 
 #[derive(Debug, Serialize, Deserialize)]
