@@ -75,18 +75,29 @@ fn write_instance(instance: &mut Instance, root_dir: &PathBuf, current_dir: &Pat
 async fn hello(request: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, GenericError> {
 	let body = request.collect().await?.aggregate();
 	let payload: Payload = serde_json::from_reader(body.reader())?;
+
 	match payload {
 		Payload::Export { mut data } => {
 			let root = data.first_mut().unwrap();
-
 			let current_dir = std::env::current_dir().unwrap();
-			let root_dir = current_dir.join("src");
-			std::fs::remove_dir_all(&root_dir).unwrap();
 
-			write_instance(root, &current_dir, &root_dir, true);
+			let config = crate::config::read_config_file(current_dir.join("vie.config.yml"));
+			let root_dir = match config.root_path {
+				Some(value) => match value.is_relative() {
+					true => current_dir.join(value),
+					false => value
+				},
+				None => current_dir
+			};
+			let src_dir = root_dir.join("src");
+			std::fs::remove_dir_all(&src_dir).unwrap();
 
-			let sourcemap = RojoSourcemapInstance::from(root);
-			std::fs::write(current_dir.join("sourcemap.json"), serde_json::to_string(&sourcemap).unwrap()).unwrap();
+			write_instance(root, &root_dir, &src_dir, true);
+
+			if config.compatibility.rojo_sourcemap {
+				let sourcemap = RojoSourcemapInstance::from(root);
+				std::fs::write(root_dir.join("sourcemap.json"), serde_json::to_string(&sourcemap).unwrap()).unwrap();
+			}
 		},
 		_ => unimplemented!()
 	}

@@ -2,6 +2,7 @@ use clap::{ Parser, Subcommand };
 
 mod data;
 mod http;
+mod config;
 
 #[derive(Debug, Parser)]
 struct Cli {
