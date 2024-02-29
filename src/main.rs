@@ -15,8 +15,14 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
 	#[command(about = "Begin sync for single instance tree")]
-	Single
+	Single,
+	
+	#[command(about = "Print version information")]
+	Version
 }
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const GIT_HASH: &str = env!("GIT_HASH");
 
 #[tokio::main]
 async fn main() {
@@ -24,6 +30,7 @@ async fn main() {
 	match arguments.command {
 		Command::Single => {
 			http::start_server().await.unwrap();
-		}
+		},
+		Command::Version => println!("VIE {VERSION} ({GIT_HASH})")
 	}
 }
