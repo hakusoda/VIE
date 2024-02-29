@@ -22,7 +22,7 @@ Simply acquire it from the [Creator Store](https://create.roblox.com/store/asset
 # Usage
 whenever you wish to import or export, open up your terminal of choice and execute this...
 ```sh
-vie once
+vie single
 ```
 
 now over in Roblox Studio, head over to the Plugins tab and click on one of VIE's actions, and you're done!

@@ -11,15 +11,15 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-	#[command(about = "Start server for the Roblox Studio plugin (only one action)")]
-	Once
+	#[command(about = "Begin sync for single instance tree")]
+	Single
 }
 
 #[tokio::main]
 async fn main() {
 	let arguments = Cli::parse();
 	match arguments.command {
-		Command::Once => {
+		Command::Single => {
 			http::start_server().await.unwrap();
 		}
 	}
