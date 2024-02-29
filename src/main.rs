@@ -3,6 +3,8 @@ use clap::{ Parser, Subcommand };
 mod data;
 mod http;
 mod config;
+mod export;
+mod compatibility;
 
 #[derive(Debug, Parser)]
 struct Cli {

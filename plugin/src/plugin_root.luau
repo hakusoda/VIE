@@ -162,7 +162,7 @@ function get_attributes(instance: Instance)
 	return attributes
 end
 
-function a(instance: Instance): VieInstance
+function serialise_instance(instance: Instance): VieInstance
 	local name = instance.Name
 	assert(string.find(name, "+") ~= 1, "Instance names cannot start with a plus symbol (+), as they are reserved for VIE files.")
 	
@@ -174,7 +174,7 @@ function a(instance: Instance): VieInstance
 	local children = {}
 	for _,child in instance:GetChildren() do
 		if not child:IsA("PackageLink") then
-			table.insert(children, a(child))
+			table.insert(children, serialise_instance(child))
 		end
 	end
 	
@@ -204,11 +204,9 @@ local export_button = toolbar:CreateButton("vie_export", "", "rbxassetid://14813
 export_button.ClickableWhenViewportHidden = true
 export_button.Click:Connect(function()
 	local instance = assert(Selection:Get()[1])
-	local b = a(instance)
-	
 	local json = HttpService:JSONEncode({
 		kind = "export",
-		data = { b }
+		data = serialise_instance(instance)
 	})
 	HttpService:RequestAsync({
 		Url = "http://localhost:3143",
