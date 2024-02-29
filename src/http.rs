@@ -7,6 +7,7 @@ use hyper::{
 	service::service_fn,
 	Request, Response
 };
+use indicatif::ProgressBar;
 use hyper_util::rt::TokioIo;
 use http_body_util::{ Full, BodyExt };
 
@@ -42,12 +43,21 @@ async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Respons
 			};
 			let src_dir = root_dir.join("src");
 			let _ = std::fs::remove_dir_all(&src_dir);
-			write_plugin_instance(&mut root_instance, &current_dir, &src_dir, true);
+
+			let total_instance_count = root_instance.total_instance_count();
+			let progress_bar = ProgressBar::new(total_instance_count);
+			write_plugin_instance(&mut root_instance, &current_dir, &src_dir, true, &progress_bar);
+			
+			progress_bar.finish_and_clear();
+			println!("Generated instance tree ({total_instance_count} files)");
 
 			if config.compatibility.rojo_sourcemap {
 				let sourcemap = RojoSourcemapInstance::from(&root_instance);
 				std::fs::write(current_dir.join("sourcemap.json"), serde_json::to_string(&sourcemap).unwrap()).unwrap();
+				println!("Generated sourcemap.json");
 			}
+
+			println!("👍");
 		},
 		_ => unimplemented!()
 	}
@@ -70,6 +80,5 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
 	}
 
 	drop(listener);
-	println!("success!");
 	Ok(())
 }
