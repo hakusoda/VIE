@@ -8,7 +8,7 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Config {
 	#[serde(default)]
-	pub root_path: Option<PathBuf>,
+	pub root_path: PathBuf,
 
 	#[serde(default)]
 	pub compatibility: CompatibilityConfig
@@ -17,7 +17,7 @@ pub struct Config {
 impl Default for Config {
 	fn default() -> Self {
 		Self {
-			root_path: None,
+			root_path: PathBuf::default(),
 			compatibility: CompatibilityConfig::default()
 		}
 	}

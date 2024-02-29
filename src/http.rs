@@ -34,12 +34,9 @@ async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Respons
 			let current_dir = std::env::current_dir().unwrap();
 
 			let config = crate::config::read_config_file(current_dir.join("vie.config.yml"));
-			let root_dir = match config.root_path {
-				Some(value) => match value.is_relative() {
-					true => current_dir.join(value),
-					false => value
-				},
-				None => current_dir.clone()
+			let root_dir = match config.root_path.is_relative() {
+				true => current_dir.join(config.root_path),
+				false => config.root_path
 			};
 			let src_dir = root_dir.join("src");
 			let _ = std::fs::remove_dir_all(&src_dir);
