@@ -72,7 +72,7 @@ fn write_instance(instance: &mut Instance, root_dir: &PathBuf, current_dir: &Pat
 	}
 }
 
-async fn hello(request: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, GenericError> {
+async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, GenericError> {
 	let body = request.collect().await?.aggregate();
 	let payload: Payload = serde_json::from_reader(body.reader())?;
 
@@ -113,7 +113,7 @@ pub async fn start_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
 	let io = TokioIo::new(stream);
 	if let Err(err) = http1::Builder::new()
 		.keep_alive(false)
-		.serve_connection(io, service_fn(hello))
+		.serve_connection(io, service_fn(main_service))
 		.await
 	{
 		println!("Error serving connection: {:?}", err);
