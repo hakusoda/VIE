@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use serde::Serialize;
-use crate::export::PluginInstance;
+use crate::export::PluginExportItem;
 
 #[derive(Serialize)]
 pub struct RojoSourcemapInstance {
@@ -14,12 +14,15 @@ pub struct RojoSourcemapInstance {
 }
 
 impl RojoSourcemapInstance {
-	pub fn from(instance: &PluginInstance) -> Self {
-		RojoSourcemapInstance {
-			name: instance.name.clone(),
-			class: instance.class.clone(),
-			paths: instance.file_path.clone().map(|x| vec![x]),
-			children: instance.children.as_ref().map(|x| x.iter().map(|x| RojoSourcemapInstance::from(x)).collect())
+	pub fn from(item: &PluginExportItem) -> Option<Self> {
+		match item {
+			PluginExportItem::Instance(instance) => Some(RojoSourcemapInstance {
+				name: instance.name.clone(),
+				class: instance.class.clone(),
+				paths: instance.file_path.clone().map(|x| vec![x]),
+				children: instance.children.as_ref().map(|x| x.iter().filter_map(|x| RojoSourcemapInstance::from(x)).collect())
+			}),
+			_ => None
 		}
 	}
 }

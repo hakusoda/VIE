@@ -12,7 +12,7 @@ use hyper_util::rt::TokioIo;
 use http_body_util::{ Full, BodyExt };
 
 use crate::{
-	export::{ PluginInstance, write_plugin_instance },
+	export::{ PluginExportItem, write_plugin_item },
 	compatibility::rojo::RojoSourcemapInstance
 };
 
@@ -20,7 +20,7 @@ use crate::{
 #[serde(tag = "kind", content = "data", rename_all = "snake_case")]
 enum Payload {
 	Import,
-	Export(PluginInstance)
+	Export(PluginExportItem)
 }
 
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
@@ -42,8 +42,8 @@ async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Respons
 			let _ = std::fs::remove_dir_all(&src_dir);
 
 			let total_instance_count = root_instance.total_instance_count();
-			let progress_bar = ProgressBar::new(total_instance_count);
-			write_plugin_instance(&mut root_instance, &current_dir, &src_dir, true, &progress_bar);
+			let progress_bar: ProgressBar = ProgressBar::new(total_instance_count);
+			write_plugin_item(&mut root_instance, &current_dir, &src_dir, true, &progress_bar);
 			
 			progress_bar.finish_and_clear();
 			println!("Generated instance tree ({total_instance_count} files)");
