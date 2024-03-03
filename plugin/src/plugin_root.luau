@@ -180,6 +180,7 @@ function serialise_instance(instance: Instance): ExportItem
 		return {
 			name = name,
 			kind = "model_reference",
+			class = instance.ClassName,
 			asset_id = asset_id
 		} :: ModelReference
 	else

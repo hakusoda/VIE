@@ -13,6 +13,7 @@ pub enum PluginExportItem {
 	Instance(PluginInstance),
 	ModelReference {
 		name: String,
+		class: String,
 		asset_id: u64
 	}
 }
@@ -21,7 +22,7 @@ impl PluginExportItem {
 	pub fn total_instance_count(&self) -> u64 {
 		match self {
 			PluginExportItem::Instance(instance) => instance.total_instance_count(),
-			PluginExportItem::ModelReference { name: _, asset_id: _ } => 1
+			PluginExportItem::ModelReference { name: _, class: _, asset_id: _ } => 1
 		}
 	}
 }
@@ -102,7 +103,7 @@ pub fn write_plugin_item(item: &mut PluginExportItem, root_dir: &PathBuf, curren
 				}
 			}
 		},
-		PluginExportItem::ModelReference { name, asset_id } => {
+		PluginExportItem::ModelReference { name, class: _, asset_id } => {
 			let path = match is_root_dir {
 				true => current_dir.join("+reference.vie"),
 				false => current_dir.join(format!("{name}.reference.vie"))

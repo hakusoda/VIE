@@ -22,7 +22,12 @@ impl RojoSourcemapInstance {
 				paths: instance.file_path.clone().map(|x| vec![x]),
 				children: instance.children.as_ref().map(|x| x.iter().filter_map(|x| RojoSourcemapInstance::from(x)).collect())
 			}),
-			_ => None
+			PluginExportItem::ModelReference { name, class, asset_id: _ } => Some(RojoSourcemapInstance {
+				name: name.clone(),
+				class: class.clone(),
+				paths: None,
+				children: None
+			})
 		}
 	}
 }
