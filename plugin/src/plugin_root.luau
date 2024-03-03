@@ -18,13 +18,22 @@ import_button.Click:Connect(function()
 	
 end)
 
-type VieInstance = {
+type ExportItem = ExportInstance | ModelReference
+
+type ExportInstance = {
 	name: string,
+	kind: "instance",
 	class: string,
 	source: string?,
-	children: { VieInstance }?,
+	children: { ExportItem }?,
 	properties: { [string]: any }?,
 	attributes: { [string]: any }?
+}
+
+type ModelReference = {
+	name: string,
+	kind: "model_reference",
+	asset_id: number
 }
 
 function get_api_dump_class(class: string): get_full_api_dump.RobloxApiDumpClass?
@@ -162,42 +171,52 @@ function get_attributes(instance: Instance)
 	return attributes
 end
 
-function serialise_instance(instance: Instance): VieInstance
+function serialise_instance(instance: Instance): ExportItem
 	local name = instance.Name
 	assert(string.find(name, "+") ~= 1, "Instance names cannot start with a plus symbol (+), as they are reserved for VIE files.")
 	
-	local class = instance.ClassName
-	local vie: VieInstance = {
-		name = name,
-		class = class
-	}
-	local children = {}
-	for _,child in instance:GetChildren() do
-		if not child:IsA("PackageLink") then
-			table.insert(children, serialise_instance(child))
+	local asset_id = instance:GetAttribute("vie_referencing_asset_id")
+	if typeof(asset_id) == "number" then
+		return {
+			name = name,
+			kind = "model_reference",
+			asset_id = asset_id
+		} :: ModelReference
+	else
+		local class = instance.ClassName
+		local vie: ExportInstance = {
+			name = name,
+			kind = "instance",
+			class = class
+		}
+		local children = {}
+		for _,child in instance:GetChildren() do
+			if not child:IsA("PackageLink") then
+				table.insert(children, serialise_instance(child))
+			end
 		end
+		
+		if #children > 0 then
+			vie.children = children
+		end
+		
+		if instance:IsA("LuaSourceContainer") then
+			vie.source = ScriptEditorService:GetEditorSource(instance)
+		end
+		
+		local api_class = assert(get_api_dump_class(class))
+		local properties = get_properties(instance, api_class)
+		if next(properties) then
+			vie.properties = properties
+		end
+		
+		local attributes = get_attributes(instance)
+		if next(attributes) then
+			vie.attributes = attributes
+		end
+		
+		return vie
 	end
-	
-	if #children > 0 then
-		vie.children = children
-	end
-	
-	if instance:IsA("LuaSourceContainer") then
-		vie.source = ScriptEditorService:GetEditorSource(instance)
-	end
-	
-	local api_class = assert(get_api_dump_class(class))
-	local properties = get_properties(instance, api_class)
-	if next(properties) then
-		vie.properties = properties
-	end
-	
-	local attributes = get_attributes(instance)
-	if next(attributes) then
-		vie.attributes = attributes
-	end
-	
-	return vie
 end
 
 local export_button = toolbar:CreateButton("vie_export", "", "rbxassetid://14813993705", "Export") :: PluginToolbarButton
