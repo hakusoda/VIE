@@ -62,6 +62,18 @@ fn instance_is_script(instance: &PluginInstance) -> bool {
 	class == "Script" || class == "LocalScript" || class == "ModuleScript"
 }
 
+fn get_script_extension(instance: &PluginInstance) -> String {
+	match instance.class.as_str() {
+		"Script" => match crate::cast!(instance.properties.as_ref().unwrap().get("RunContext").unwrap(), DataType::EnumItem).as_str() {
+			"Server" => ".server",
+			"Client" => ".client",
+			_ => ""
+		},
+		"LocalScript" => ".client",
+		_ => ""
+	}.to_string() + ".luau"
+}
+
 pub fn write_plugin_item(item: &mut PluginExportItem, root_dir: &PathBuf, current_dir: &PathBuf, is_root_dir: bool, progress_bar: &ProgressBar) {
 	match item {
 		PluginExportItem::Instance(instance) => {
@@ -70,15 +82,24 @@ pub fn write_plugin_item(item: &mut PluginExportItem, root_dir: &PathBuf, curren
 				false => current_dir.clone()
 			};
 			if instance_is_script(instance) {
-				let path = match is_root_dir {
-					true => current_dir.join("+instance.luau"),
-					false => match instance.children.is_some() {
-						true => current_dir.join("+instance.luau"),
-						false => current_dir.join(format!("{}.luau", instance.name))
-					}
-				};
+				let name = match is_root_dir || instance.children.is_some()  {
+					true => "+instance".into(),
+					false => instance.name.clone()
+				} + &get_script_extension(instance);
+				let path = current_dir.join(&name);
 				std::fs::create_dir_all(path.parent().unwrap()).unwrap();
 				std::fs::write(&path, instance.source.as_ref().unwrap()).unwrap();
+
+				if let Some(properties) = &mut instance.properties {
+					properties.remove("RunContext").unwrap();
+					if properties.is_empty() {
+						instance.properties = None;
+					}
+				}
+
+				if instance.attributes.is_some() || instance.properties.is_some() {
+					std::fs::write(current_dir.join(name.replace(".luau", ".vie")), serde_yaml::to_string(instance).unwrap().trim_end()).unwrap();
+				}
 		
 				instance.file_path = Some(path.strip_prefix(root_dir).unwrap().to_path_buf());
 			} else {
@@ -112,7 +133,7 @@ pub fn write_plugin_item(item: &mut PluginExportItem, root_dir: &PathBuf, curren
 			std::fs::write(path, serde_yaml::to_string(&serde_json::json!({
 				"kind": "model",
 				"asset_id": asset_id
-			})).unwrap()).unwrap();
+			})).unwrap().trim_end()).unwrap();
 		}
 	}
 }
