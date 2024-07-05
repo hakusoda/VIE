@@ -44,6 +44,33 @@ pub enum DataType {
 	Rect(String)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum DataType2 {
+	String(String),
+	Double(f64),
+	Float(f32),
+	Integer(i32),
+	Integer64(i64),
+	Boolean(bool),
+	EnumItem(String),
+	Instance,
+	CFrame(String),
+	Vector3([f64; 3]),
+	Vector2([f64; 2]),
+	Nil,
+	Color3([u8; 3]),
+	BrickColor(String),
+	ColorSequence(String),
+	UDim([f32; 2]),
+	UDim2([[f32; 2]; 2]),
+	Font {
+		style: String,
+		family: String,
+		weight: String
+	},
+	Rect(String)
+}
+
 fn linked_map_from<K: Eq + Hash, V, const N: usize>(array: [(K, V); N]) -> LinkedHashMap<K, V> {
 	let mut map = LinkedHashMap::new();
 	for (key, value) in array {

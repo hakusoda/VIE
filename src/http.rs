@@ -29,16 +29,20 @@ async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Respons
 	let body = request.collect().await?.aggregate();
 	let payload: Payload = serde_json::from_reader(body.reader())?;
 
-	match payload {
-		Payload::Export(mut root_instance) => {
-			let current_dir = std::env::current_dir().unwrap();
+	let current_dir = std::env::current_dir().unwrap();
 
-			let config = crate::config::read_config_file(current_dir.join("vie.config.yml"));
-			let root_dir = match config.root_path.is_relative() {
-				true => current_dir.join(config.root_path),
-				false => config.root_path
-			};
-			let src_dir = root_dir.join("src");
+	let config = crate::config::read_config_file(current_dir.join("vie.config.yml"));
+	let root_dir = match config.root_path.is_relative() {
+		true => current_dir.join(config.root_path),
+		false => config.root_path
+	};
+	let src_dir = root_dir.join("src");
+	match payload {
+		Payload::Import => {
+			let items = crate::import::read_instance_tree(&src_dir, true);
+			return Ok(Response::new(Full::new(Bytes::from(serde_json::to_string(&items).unwrap()))));
+		},
+		Payload::Export(mut root_instance) => {
 			let _ = std::fs::remove_dir_all(&src_dir);
 
 			let total_instance_count = root_instance.total_instance_count();
@@ -55,8 +59,7 @@ async fn main_service(request: Request<hyper::body::Incoming>) -> Result<Respons
 			}
 
 			println!("👍");
-		},
-		_ => unimplemented!()
+		}
 	}
     Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
 }

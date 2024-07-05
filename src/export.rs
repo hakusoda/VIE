@@ -91,7 +91,8 @@ pub fn write_plugin_item(item: &mut PluginExportItem, root_dir: &PathBuf, curren
 				std::fs::write(&path, instance.source.as_ref().unwrap()).unwrap();
 
 				if let Some(properties) = &mut instance.properties {
-					properties.remove("RunContext").unwrap();
+					properties.remove("Source");
+					properties.remove("RunContext");
 					if properties.is_empty() {
 						instance.properties = None;
 					}

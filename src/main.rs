@@ -4,6 +4,7 @@ mod data;
 mod http;
 mod config;
 mod export;
+mod import;
 mod compatibility;
 
 #[derive(Debug, Parser)]
