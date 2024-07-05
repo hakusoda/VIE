@@ -1,7 +1,7 @@
 [package]
 name = "vie"
 authors = ["HAKUMI", "katsumi <katsumi@hakumi.cafe>"]
-version = "0.0.5"
+version = "0.1.0"
 
 readme = "./README.md"
 license = "AGPL-3.0-only"
